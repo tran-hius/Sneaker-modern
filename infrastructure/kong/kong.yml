@@ -1,0 +1,8 @@
+services:
+  - name: identity-service
+    url: http://identity-service:3001
+    routes:
+      - name: identity-route
+        paths:
+          - /api/identity
+        strip_path: true
