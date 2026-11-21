@@ -1,3 +1,5 @@
+_format_version: "3.0"
+
 services:
   - name: identity-service
     url: http://identity-service:3001

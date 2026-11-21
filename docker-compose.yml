@@ -1,0 +1,22 @@
+services:
+  kong:
+    image: kong:3.8
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml #Let kong know the location of the configuration file
+      KONG_PROXY_ACCESS_LOG: /dev/stdout #The Access Log records the requests that clients send through kong
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    volumes:
+      - ./infrastructure/kong/kong.yml:/kong/kong.yml:ro
+    ports:
+      - "8080:8000"
+    depends_on:
+      - identity-service #specify the startup sequence
+
+  identity-service:
+    build:
+      context: ./services/identity-service
+      dockerfile: Dockerfile
+    container_name: identity-service
+    environment:
+      - PORT=3001
