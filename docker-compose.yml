@@ -3,15 +3,32 @@ services:
     image: kong:3.8
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /kong/kong.yml #Let kong know the location of the configuration file
-      KONG_PROXY_ACCESS_LOG: /dev/stdout #The Access Log records the requests that clients send through kong
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
     volumes:
       - ./infrastructure/kong/kong.yml:/kong/kong.yml:ro
     ports:
       - "8080:8000"
     depends_on:
-      - identity-service #specify the startup sequence
+      - identity-service
+
+  mysql:
+    image: mysql:8.0
+    container_name: identity-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: identity_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./services/identity-service/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   identity-service:
     build:
@@ -20,3 +37,14 @@ services:
     container_name: identity-service
     environment:
       - PORT=3001
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=identity_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
